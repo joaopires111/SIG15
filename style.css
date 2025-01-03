@@ -1,5 +1,8 @@
-#map{
-    width: 100vh;
-    height: 500px;
+#mapa{
+    width: 95vw;
+    height: 95vh;
     border: 2px solid black;
+}
+body{
+
 }
