@@ -6,3 +6,62 @@
 body{
 
 }
+
+/* Mudar o cursor quando estiver sobre o mapa */
+.leaflet-container {
+    cursor: help !important;
+}
+
+/* ======================== */
+/* Estilo da janela para a legenda WMS */
+.winLegend {
+    width: max-content;
+    border: 1px solid #ccc;
+    border-radius: 8px;
+    overflow: hidden;
+    font-family: Arial, sans-serif;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+    }
+    /* Cabeçalho da janela para a legenda WMS */
+    .winLegend-header {
+    background-color: #373c41;
+    color: white;
+    padding: 5px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    cursor: pointer;
+    }
+    .winLegend-header p {
+    margin: 0 10px 0 0;
+    font-size: 16px;
+    }
+    /* Ícone para expandir/contrair */
+    .toggle-icon-winLegend {
+    font-size: 16px;
+    font-weight: bold;
+    user-select: none;
+    }
+    /* Conteúdo da janela */
+    .winLegend-content {
+    padding: 10px;
+    background-color: #f9f9f9;
+    display: none; /* Oculto por padrão */
+    }
+    /* Utilizar um checkbox para alternar a visibilidade */
+    input[id="chk-toggle-winLegend"] {
+    display: none; /* Esconde o checkbox */
+    }
+    /* Quando o checkbox está selecionado, mostrar conteúdo */
+    input[id="chk-toggle-winLegend"]:checked ~ .winLegend-content {
+    display: block;
+    }
+
+    /* Quando o checkbox está selecionado, mudar para o símbolo "-" */
+input[id="chk-toggle-winLegend"]:checked ~ .winLegend-header .toggle-icon-winLegend::after {
+    content: "−"; /* Símbolo "menos" */
+    }
+    /* Quando o checkbox não está selecionado, mostar o símbolo "+" */
+    .winLegend-header .toggle-icon-winLegend::after {
+    content: "+"; /* Símbolo "mais" */
+    }
