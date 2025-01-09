@@ -5,13 +5,13 @@ const coordESTG = [41.692, -8.838];
 const offsetLat = 0.01; // Latitude offset
 const offsetLon = 0.01; // Longitude offset
 
+var fid;
+
 const smallerBounds = [
        [coordESTG[0] - offsetLat, coordESTG[1] - offsetLon], // Bottom-left corner
        [coordESTG[0] + offsetLat, coordESTG[1] + offsetLon]  // Top-right corner
 ];
 
-// Log the new smaller bounding box
-console.log("Smaller Bounding Box:", smallerBounds);
 
 
 const wms_my_url = 'http://localhost:8080/geoserver/SIG15/wms';
@@ -87,6 +87,17 @@ map.on('moveend', function() {
 */
 
 function onclickWMSinteragivel(e) {
+
+       // Fetch data from your server (assume it's at /data endpoint)
+       fetch('/data')
+              .then(response => response.json())  // Parse the JSON data
+              .then(data => {
+                     data.forEach(item => {
+                            console.log(item.nome);
+                     });
+              })
+              .catch(error => console.error('Error fetching data:', error));
+
        // Obter o URL completo para o GetFeatureInfo
        var url = getUrl_WMS_GetFeatureInfo(e, map, wms_my_url, 'SIG15:sig15areaturistica');
        // Efetuar o pedido AJAX ao servidor WMS
@@ -95,11 +106,15 @@ function onclickWMSinteragivel(e) {
               .then(data => {
                      // Create popup content from the response data
                      if (data.features && data.features.length > 0) {
+
+
                             var properties = data.features[0].properties; // Propriedades do elemento obtido
                             var content = "<b>Dados do elemento:</b><br>";
                             for (var key in properties) {
-                                   if (key.includes('nome'))
+                                   if (key.includes('fid')) {
+                                          fid = properties[key];
                                           content += key + ": " + properties[key] + "<br>";
+                                   }
                             }
                             L.popup()
                                    .setLatLng(e.latlng) // Localização do popup
@@ -160,9 +175,7 @@ function getUrl_WMS_GetFeatureInfo(e, map, wmsUrl, layer) {
               x: point.x,
               y: point.y
        };
-       // Construir o URL completo para o GetFeatureInfo
-       console.log("GetFeatureInfo URL:", wmsUrl + L.Util.getParamString(params));
-       console.log("Map BBOX:", map.getBounds().toBBoxString());
+
        return wmsUrl + L.Util.getParamString(params);
 
 }
@@ -196,50 +209,3 @@ legend.onAdd = function (map) {
 };
 legend.addTo(map);
 
-
-// ========================================================================
-// Exemplo 4 com invocação de serviços REST
-function exemplo4(censosData) {
-       // Adicionar o layer ao mapa com definicao dos eventos
-       jsonCensosData_layer = L.geoJson(censosData,
-       {
-       style: censosStyle,
-       onEachFeature: function (feature, layer) {
-       layer.on({
-       dblclick: ondblclickSubSeccao,
-       click: onClickSubSeccao
-       });
-       }
-       }
-       );
-       jsonCensosData_layer.addTo(map); // Adicionar ao mapa para ficar visivel
-       }
-       // Funcao a ser invocada quando se clica numa subseccao
-       function onClickSubSeccao(e) {
-       // Parar a progagacao do evento
-       L.DomEvent.stopPropagation(e);
-       // Obter o id do elemento
-       var fid = e.target.feature.properties.fid;
-       // Invocar o serviço REST
-       fetch(`/api/vizinhos/${fid}`)
-       .then(response => {
-       if (!response.ok) {
-       return null; // Erro ao obter dados do servidor - devolver null
-       }
-       return response.json(); // Devolver os dados obtidos
-       })
-       .then(data => {
-       if (data) {
-       // Apresentar popup com os dados do elemento
-       L.popup()
-       .setLatLng(e.latlng)
-       .setContent(`Número de vizinhos: ${data.numVizinhos}`)
-       .openOn(map);
-       }
-       }).catch(error => {
-       console.error('Erro ao obter dados do servidor', error);
-       });
-       }
-       function ondblclickSubSeccao(e) {
-       // Para completar a seguir
-       }

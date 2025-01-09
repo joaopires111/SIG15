@@ -1,16 +1,18 @@
+// Import the 'pg' module
 const { Client } = require('pg');
 
 class Database {
     constructor() {
         this.conexao = new Client({
-            host: 'localhost',
-            port: 5432,
-            user: 'postgres',
-            password: 'postgres',
-            database: 'SIG15'
+            host: 'localhost',        // PostgreSQL host
+            port: 5432,               // Default port for PostgreSQL
+            user: 'postgres',    // Your PostgreSQL username
+            password: 'postgres', // Your PostgreSQL password
+            database: 'SIG15', // The database name you want to access
         });
     }
     async connect() {
+        console.log('Connecting to database... 1');
         await this.conexao.connect();
 
     }
@@ -20,7 +22,7 @@ class Database {
     // Método de teste para obter dados sobre uma subseccao (número de subseccoes vizinhas)
     async getNumVizinhos(id) {
         const query = `
-select * from presidentes_cmvc where id = 1;
+select nome from professores_estg where id = 1;
 `;
         try {
             const result = await this.conexao.query(query, [id]);
