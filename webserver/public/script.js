@@ -7,6 +7,10 @@ const offsetLon = 0.01; // Longitude offset
 
 var fid;
 
+let isFiltered = false;
+// Declare a variable to hold the current layer control instance
+let currentLayerControl;
+
 const smallerBounds = [
        [coordESTG[0] - offsetLat, coordESTG[1] - offsetLon], // Bottom-left corner
        [coordESTG[0] + offsetLat, coordESTG[1] + offsetLon]  // Top-right corner
@@ -47,7 +51,7 @@ const pontosTuristicosLayer = L.tileLayer.wms(wms_my_url, {
        opacity: 1
 });
 
-const sig15areaturistica = L.tileLayer.wms(wms_my_url, {
+var sig15areaturistica = L.tileLayer.wms(wms_my_url, {
        layers: 'SIG15:sig15areaturistica',
        format: 'image/png',
        transparent: true,
@@ -65,15 +69,18 @@ pontosTuristicosLayer.addTo(map);
 sig15areaturistica.addTo(map);
 caminhosLayer.addTo(map);
 
+// Global reference to the active sig15areaturistica layer
+let activeSig15areaturistica = sig15areaturistica;
+
 // Add a layer control to switch between layers
-const overlayMaps = {
+var overlayMaps = {
        "Viana do Castelo": vianaLayer,
        "Áreas Turisticas": sig15areaturistica,
        "Pontos Turísticos": pontosTuristicosLayer,
        "Caminhos": caminhosLayer
 };
 
-L.control.layers(baseMaps, overlayMaps).addTo(map);
+currentLayerControl = L.control.layers(baseMaps, overlayMaps).addTo(map);
 L.control.scale().addTo(map);
 map.fitBounds(smallerBounds);
 
@@ -88,38 +95,86 @@ map.on('moveend', function() {
 
 function onclickWMSinteragivel(e) {
 
-       // Fetch data from your server (assume it's at /data endpoint)
-       fetch('/data')
-              .then(response => response.json())  // Parse the JSON data
-              .then(data => {
-                     data.forEach(item => {
-                            console.log(item.nome);
-                     });
-              })
-              .catch(error => console.error('Error fetching data:', error));
 
        // Obter o URL completo para o GetFeatureInfo
-       var url = getUrl_WMS_GetFeatureInfo(e, map, wms_my_url, 'SIG15:sig15areaturistica');
+       const url = getUrl_WMS_GetFeatureInfo(e, map, wms_my_url, 'SIG15:sig15areaturistica');
        // Efetuar o pedido AJAX ao servidor WMS
        fetch(url)
               .then(response => response.json()) // Fazer o parse da resposta JSON
               .then(data => {
                      // Create popup content from the response data
                      if (data.features && data.features.length > 0) {
-
-
                             var properties = data.features[0].properties; // Propriedades do elemento obtido
-                            var content = "<b>Dados do elemento:</b><br>";
+                            var content = "";
                             for (var key in properties) {
-                                   if (key.includes('fid')) {
+                                   if (key.includes('nome')) {
+                                          content += "<h3><b>" + properties[key] + "</h3></b>";
                                           fid = properties[key];
-                                          content += key + ": " + properties[key] + "<br>";
+
+                                          if (fid == 'camaraviana') {
+                                                 // Fetch data from your server (assume it's at /data endpoint)
+                                                 fetch('/data1')
+                                                        .then(response => response.json())  // Parse the JSON data
+                                                        .then(data => {
+                                                               content += "<b>Presidentes</b><br>";
+                                                               data.forEach(item => {
+                                                                      //console.log(item.nome);
+                                                                      content += item.nome + " " + item.ano + "<br>";
+
+                                                               });
+                                                               L.popup()
+                                                                      .setLatLng(e.latlng) // Localização do popup
+                                                                      .setContent(content) // Conteúdo do popup
+                                                                      .openOn(map); // Mostrar o popup no mapa
+                                                        })
+
+                                                        .catch(error => console.error('Error fetching data:', error));
+                                          } else if (fid == 'estacaoviana') {
+                                                 // Fetch data from your server (assume it's at /data endpoint)
+                                                 fetch('/data2')
+                                                        .then(response => response.json())  // Parse the JSON data
+                                                        .then(data => {
+                                                               content += "<b>Lojas do Shopping</b><br>";
+                                                               data.forEach(item => {
+                                                                      content += item.nome + "<br>";
+                                                               });
+                                                               L.popup()
+                                                                      .setLatLng(e.latlng) // Localização do popup
+                                                                      .setContent(content) // Conteúdo do popup
+                                                                      .openOn(map); // Mostrar o popup no mapa
+                                                        })
+
+                                                        .catch(error => console.error('Error fetching data:', error));
+
+                                          } else if (fid == 'ESTG') {
+                                                 // Fetch data from your server (assume it's at /data endpoint)
+                                                 fetch('/data3')
+                                                        .then(response => response.json())  // Parse the JSON data
+                                                        .then(data => {
+                                                               content += "<b>Professores</b><br>";
+                                                               data.forEach(item => {
+                                                                      //console.log(item.nome);
+                                                                      content += item.nome + "<br>";
+
+                                                               });
+                                                               L.popup()
+                                                                      .setLatLng(e.latlng) // Localização do popup
+                                                                      .setContent(content) // Conteúdo do popup
+                                                                      .openOn(map); // Mostrar o popup no mapa
+                                                        })
+
+                                                        .catch(error => console.error('Error fetching data:', error));
+
+                                          }
+                                          else {
+                                                 console.log("CONTEUDO" + content);
+                                                 L.popup()
+                                                        .setLatLng(e.latlng) // Localização do popup
+                                                        .setContent(content) // Conteúdo do popup
+                                                        .openOn(map); // Mostrar o popup no mapa
+                                          }
                                    }
                             }
-                            L.popup()
-                                   .setLatLng(e.latlng) // Localização do popup
-                                   .setContent(content) // Conteúdo do popup
-                                   .openOn(map); // Mostrar o popup no mapa
                      } else {
                             L.popup()
                                    .setLatLng(e.latlng)
@@ -136,23 +191,26 @@ function onclickWMSinteragivel(e) {
               });
 }
 
-// Adicionar evento de clique sobre o mapa uma vez que o tema está ativo por omissão
+
+
+// Add event listener for map clicks (layer is active by default)
 map.on('click', onclickWMSinteragivel);
-// Adicionar evento de ativação de um layer no layer control
+
+// Add event listener for activating a layer in the layer control
 map.on('overlayadd', function (event) {
-       map.closePopup(); // Fechar popup se estiver aberto
-       if (event.layer === sig15areaturistica) { // Se layer é o wms_censos_layer definido anteriormente
-              map.on('click', onclickWMSinteragivel);
-       }
-});
-// Adicionar evento de desativação de um layer no layer control
-map.on('overlayremove', function (event) {
-       map.closePopup(); // Fechar popup se estiver aberto
-       if (event.layer === sig15areaturistica) {
-              map.off('click', onclickWMSinteragivel);
-       }
+    map.closePopup(); // Close popup if open
+    if (event.layer === activeSig15areaturistica) { // Check against the current active layer
+        map.on('click', onclickWMSinteragivel);
+    }
 });
 
+// Add event listener for deactivating a layer in the layer control
+map.on('overlayremove', function (event) {
+    map.closePopup(); // Close popup if open
+    if (event.layer === activeSig15areaturistica) { // Check against the current active layer
+        map.off('click', onclickWMSinteragivel);
+    }
+});
 
 function getUrl_WMS_GetFeatureInfo(e, map, wmsUrl, layer) {
        // Ponto onde foi efetuado o clique
@@ -180,8 +238,6 @@ function getUrl_WMS_GetFeatureInfo(e, map, wmsUrl, layer) {
 
 }
 
-
-
 var legend = L.control({ position: 'topleft' });
 legend.onAdd = function (map) {
        // Construir o URL para a legenda
@@ -198,7 +254,7 @@ legend.onAdd = function (map) {
 <!-- Checkbox oculto para controlar o estado -->
 <input type="checkbox" id="chk-toggle-winLegend">
 <label for="chk-toggle-winLegend" class="winLegend-header">
-<p>Tipo de Pontos</p>
+<p>Legenda</p>
 <span class="toggle-icon-winLegend"></span>
 </label>
 <div class="winLegend-content">
@@ -209,3 +265,86 @@ legend.onAdd = function (map) {
 };
 legend.addTo(map);
 
+// In the toggle button event handler:
+document.getElementById('toggleButton').addEventListener('click', function () {
+       // Ensure the current sig15areaturistica layer is removed
+       if (map.hasLayer(activeSig15areaturistica)) {
+           map.removeLayer(activeSig15areaturistica);
+           map.fire('overlayremove', { layer: activeSig15areaturistica }); // Manually fire overlayremove
+       }
+   
+       // Add the filtered or unfiltered layer based on state
+       if (isFiltered) {
+           // Add the original unfiltered layer
+           activeSig15areaturistica = L.tileLayer.wms(wms_my_url, {
+               layers: 'SIG15:sig15areaturistica',
+               format: 'image/png',
+               transparent: true,
+               opacity: 1
+           }).addTo(map);
+   
+           console.log("Reverted to unfiltered layer.");
+       } else {
+           // Add the filtered layer
+           activeSig15areaturistica = L.tileLayer.wms(wms_my_url, {
+               layers: 'SIG15:sig15areaturistica',
+               format: 'image/png',
+               transparent: true,
+               opacity: 1,
+               CQL_FILTER: "tipo_area='interagivel'"
+           }).addTo(map);
+   
+           console.log("Filter applied: tipo_area='interagivel'");
+       }
+   
+       // Update the overlayMaps reference
+       overlayMaps["Áreas Turisticas"] = activeSig15areaturistica;
+   
+       // Remove the current layer control if it exists
+       if (currentLayerControl) {
+           map.removeControl(currentLayerControl);
+       }
+   
+       // Create and add a new layer control to the map
+       currentLayerControl = L.control.layers(baseMaps, overlayMaps).addTo(map);
+   
+       // Manually fire overlayadd event
+       map.fire('overlayadd', { layer: activeSig15areaturistica });
+   
+       // Update filter state
+       isFiltered = !isFiltered;
+   
+       // Reattach the click events to the new layer
+       attachMapClickEvents();
+   });
+   
+
+
+
+
+
+// Attach click events dynamically to the active Áreas Turisticas layer
+function attachMapClickEvents() {
+       // Remove any previous click events
+       map.off('click', onclickWMSinteragivel);
+   
+       // Add the click event if the layer is active on the map
+       if (map.hasLayer(activeSig15areaturistica)) {
+           map.on('click', onclickWMSinteragivel);
+       }
+   }
+
+   // Listen for layer control events
+map.on('overlayadd', function (event) {
+       // Check if the Áreas Turisticas layer is activated
+       if (event.layer === activeSig15areaturistica) {
+           attachMapClickEvents();
+       }
+   });
+   
+   map.on('overlayremove', function (event) {
+       // Check if the Áreas Turisticas layer is deactivated
+       if (event.layer === activeSig15areaturistica) {
+           map.off('click', onclickWMSinteragivel);
+       }
+   });
