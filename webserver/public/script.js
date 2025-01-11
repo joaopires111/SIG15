@@ -269,37 +269,65 @@ legend.onAdd = function (map) {
 };
 legend.addTo(map);
 
-// In the toggle button event handler:
-document.getElementById('toggleButton').addEventListener('click', function () {
-       // Ensure the current sig15areaturistica layer is removed
-       if (map.hasLayer(activeSig15areaturistica)) {
-           map.removeLayer(activeSig15areaturistica);
-           map.fire('overlayremove', { layer: activeSig15areaturistica }); // Manually fire overlayremove
-       }
+
+   document.getElementById('searchButton').addEventListener('click', function () {
+       const searchInput = document.getElementById('searchInput').value.trim();
    
-       // Add the filtered or unfiltered layer based on state
-       if (isFiltered) {
-           // Add the original unfiltered layer
-           activeSig15areaturistica = L.tileLayer.wms(wms_my_url, {
-               layers: 'SIG15:sig15areaturistica',
-               format: 'image/png',
-               transparent: true,
-               opacity: 1
-           }).addTo(map);
+       if (searchInput) {
+           // Remove the current sig15areaturistica layer if it exists
+           if (map.hasLayer(activeSig15areaturistica)) {
+               map.removeLayer(activeSig15areaturistica);
+               map.fire('overlayremove', { layer: activeSig15areaturistica }); // Manually fire overlayremove
+           }
    
-           console.log("Reverted to unfiltered layer.");
-       } else {
-           // Add the filtered layer
+           // Add the filtered layer based on the search input
            activeSig15areaturistica = L.tileLayer.wms(wms_my_url, {
                layers: 'SIG15:sig15areaturistica',
                format: 'image/png',
                transparent: true,
                opacity: 1,
-               CQL_FILTER: "tipo_area='interagivel'"
+               CQL_FILTER: `tipo_area='${searchInput}'` // Apply the filter dynamically
            }).addTo(map);
    
-           console.log("Filter applied: tipo_area='interagivel'");
+           console.log(`Filter applied: tipo_area='${searchInput}'`);
+   
+           // Update the overlayMaps reference
+           overlayMaps["Áreas Turisticas"] = activeSig15areaturistica;
+   
+           // Remove the current layer control if it exists
+           if (currentLayerControl) {
+               map.removeControl(currentLayerControl);
+           }
+   
+           // Create and add a new layer control to the map
+           currentLayerControl = L.control.layers(baseMaps, overlayMaps).addTo(map);
+   
+           // Manually fire overlayadd event
+           map.fire('overlayadd', { layer: activeSig15areaturistica });
+   
+           // Reattach the click events to the new layer
+           attachMapClickEvents();
+       } else {
+           alert('Please enter a valid tipo_area to filter.');
        }
+   });
+   
+   document.getElementById('resetButton').addEventListener('click', function () {
+       // Remove the current sig15areaturistica layer if it exists
+       if (map.hasLayer(activeSig15areaturistica)) {
+           map.removeLayer(activeSig15areaturistica);
+           map.fire('overlayremove', { layer: activeSig15areaturistica }); // Manually fire overlayremove
+       }
+   
+       // Add the original unfiltered layer back
+       activeSig15areaturistica = L.tileLayer.wms(wms_my_url, {
+           layers: 'SIG15:sig15areaturistica',
+           format: 'image/png',
+           transparent: true,
+           opacity: 1
+       }).addTo(map);
+   
+       console.log("Reverted to the original unfiltered layer.");
    
        // Update the overlayMaps reference
        overlayMaps["Áreas Turisticas"] = activeSig15areaturistica;
@@ -315,14 +343,12 @@ document.getElementById('toggleButton').addEventListener('click', function () {
        // Manually fire overlayadd event
        map.fire('overlayadd', { layer: activeSig15areaturistica });
    
-       // Update filter state
-       isFiltered = !isFiltered;
-   
-       // Reattach the click events to the new layer
+       // Reattach the click events to the original layer
        attachMapClickEvents();
-   });
    
-
+       // Clear the search input field
+       document.getElementById('searchInput').value = '';
+   });
 
 
 
