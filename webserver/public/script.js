@@ -215,7 +215,11 @@ map.on('overlayremove', function (event) {
 function getUrl_WMS_GetFeatureInfo(e, map, wmsUrl, layer) {
        // Ponto onde foi efetuado o clique
        var point = map.latLngToContainerPoint(e.latlng, map.getZoom());
-       // Obter o tamanho do mapa
+       
+       console.log(point);
+       //arredonda valores para o erro do click
+       const pointx = Math.round(point.x);
+       const pointy = Math.round(point.y);
        var size = map.getSize();
        // Definir os parâmetros para o GetFeatureInfo do WMS
        var params = {
@@ -230,8 +234,8 @@ function getUrl_WMS_GetFeatureInfo(e, map, wmsUrl, layer) {
               height: size.y, // Altura do mapa
               width: size.x, // Largura do mapa
               info_format: 'application/json', // Utilizar o formato JSON para a resposta
-              x: point.x,
-              y: point.y
+              x: pointx,
+              y: pointy
        };
 
        return wmsUrl + L.Util.getParamString(params);
